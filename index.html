@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Expomath RA - Bienvenida</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Bienvenidos a Expomath RA</h1>
+    <p>Explora figuras geométricas en realidad aumentada desde tu celular.</p>
+    
+    <button id="open-ra">Abrir RA</button>
+
+    <h2>O escanea este QR:</h2>
+    <canvas id="qrcode"></canvas>
+  </div>
+
+  <script>
+    const raUrl = window.location.href.replace("index.html","ra.html");
+    QRCode.toCanvas(document.getElementById('qrcode'), raUrl, function (error) {
+      if (error) console.error(error)
+      console.log('QR generado!');
+    });
+
+    document.getElementById('open-ra').onclick = () => {
+      window.location.href = "ra.html";
+    }
+  </script>
+</body>
+</html>
