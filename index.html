@@ -18,10 +18,9 @@
   </div>
 
   <script>
-    // URL directa de GitHub Pages a la página RA
     const raUrl = "https://valnm00.github.io/expomath-ra/ra.html";
 
-    // Generar QR que abra la RA en navegador
+    // Generar QR
     QRCode.toCanvas(document.getElementById('qrcode'), raUrl, function (error) {
       if (error) console.error(error);
       console.log('QR generado correctamente!');
