@@ -18,15 +18,19 @@
   </div>
 
   <script>
-    const raUrl = window.location.href.replace("index.html","ra.html");
+    // URL directa de GitHub Pages a la página RA
+    const raUrl = "https://valnm00.github.io/expomath-ra/ra.html";
+
+    // Generar QR que abra la RA en navegador
     QRCode.toCanvas(document.getElementById('qrcode'), raUrl, function (error) {
-      if (error) console.error(error)
-      console.log('QR generado!');
+      if (error) console.error(error);
+      console.log('QR generado correctamente!');
     });
 
-    document.getElementById('open-ra').onclick = () => {
-      window.location.href = "ra.html";
-    }
+    // Botón para abrir RA
+    document.getElementById('open-ra').addEventListener('click', () => {
+      window.location.href = raUrl;
+    });
   </script>
 </body>
 </html>
