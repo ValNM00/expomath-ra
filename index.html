@@ -2,33 +2,404 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Expomath RA - Bienvenida</title>
-  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #000000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Canvas para las estrellas */
+    #stars-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Figuras geométricas flotantes */
+    .geometric-shape {
+      position: fixed;
+      opacity: 0.1;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .shape1 {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      top: 10%;
+      left: 15%;
+      animation: float1 20s infinite ease-in-out;
+    }
+
+    .shape2 {
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 70px solid #ffffff;
+      top: 70%;
+      right: 10%;
+      animation: float2 25s infinite ease-in-out;
+    }
+
+    .shape3 {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #ffffff;
+      top: 40%;
+      right: 20%;
+      animation: float3 30s infinite ease-in-out;
+      transform: rotate(45deg);
+    }
+
+    .shape4 {
+      width: 0;
+      height: 0;
+      border-left: 35px solid transparent;
+      border-right: 35px solid transparent;
+      border-bottom: 70px solid #ffffff;
+      top: 20%;
+      right: 30%;
+      animation: float1 22s infinite ease-in-out;
+      transform: rotate(180deg);
+    }
+
+    .shape5 {
+      width: 70px;
+      height: 70px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      bottom: 15%;
+      left: 10%;
+      animation: float2 28s infinite ease-in-out;
+    }
+
+    @keyframes float1 {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(30px, -30px) rotate(90deg);
+      }
+      50% {
+        transform: translate(0, -60px) rotate(180deg);
+      }
+      75% {
+        transform: translate(-30px, -30px) rotate(270deg);
+      }
+    }
+
+    @keyframes float2 {
+      0%, 100% {
+        transform: translate(0, 0) rotate(45deg);
+      }
+      33% {
+        transform: translate(-40px, 40px) rotate(135deg);
+      }
+      66% {
+        transform: translate(40px, 40px) rotate(225deg);
+      }
+    }
+
+    @keyframes float3 {
+      0%, 100% {
+        transform: translate(0, 0) rotate(45deg);
+      }
+      50% {
+        transform: translate(50px, 50px) rotate(225deg);
+      }
+    }
+
+    .container {
+      background: rgba(20, 20, 20, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      padding: 50px 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      text-align: center;
+      animation: fadeIn 0.8s ease-out;
+      position: relative;
+      z-index: 10;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Campo para el logo */
+    .logo-container {
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      background-color: #e5e7eb;
+      max-width: 150px;
+      height: auto;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+    }
+
+    h1 {
+      color: #ffffff;
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      font-weight: 700;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    p {
+      color: #d1d5db;
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin-bottom: 35px;
+    }
+
+    #open-ra {
+      background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 18px 50px;
+      font-size: 1.2em;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      margin-bottom: 40px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #open-ra:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+      background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    }
+
+    #open-ra:active {
+      transform: translateY(-1px);
+    }
+
+    #open-3d {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.5); 
+      padding: 18px 50px;
+      font-size: 1.2em;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      margin-bottom: 40px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #open-3d:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    h2 {
+      color: #e5e7eb;
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .qr-container {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      display: inline-block;
+      box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+      margin-top: 10px;
+    }
+
+    #qrcode {
+      display: block;
+      border-radius: 10px;
+    }
+
+    .divider {
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #ffffff, transparent);
+      margin: 30px auto;
+      border-radius: 2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 25px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      p {
+        font-size: 1em;
+      }
+
+      #open-ra {
+        font-size: 1.1em;
+        padding: 16px 40px;
+      }
+
+      /* Figuras más pequeñas en móvil */
+      .shape1, .shape5 {
+        width: 50px;
+        height: 50px;
+      }
+
+      .shape3 {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Canvas para estrellas -->
+  <canvas id="stars-canvas"></canvas>
+
+  <!-- Figuras geométricas flotantes -->
+  <div class="geometric-shape shape1"></div>
+  <div class="geometric-shape shape2"></div>
+  <div class="geometric-shape shape3"></div>
+  <div class="geometric-shape shape4"></div>
+  <div class="geometric-shape shape5"></div>
+
   <div class="container">
+    <!-- logo de la U (Por que imagino que esto es de la U)-->
+      <div class="logo-container"> 
+      <img src="img/Logo-de-UNADECA.png" alt="UNADECA Logo" class="logo">
+    </div>
+
     <h1>Bienvenidos a Expomath RA</h1>
     <p>Explora figuras geométricas en realidad aumentada desde tu celular.</p>
     
     <button id="open-ra">Abrir RA</button>
+    <button id="open-3d">Ver en Visor 3D</button>
+
+    <div class="divider"></div>
 
     <h2>O escanea este QR:</h2>
-    <canvas id="qrcode"></canvas>
+    <div class="qr-container">
+      <canvas id="qrcode"></canvas>
+    </div>
   </div>
 
   <script>
-    const raUrl = "https://valnm00.github.io/expomath-ra/ra.html";
+    // ========== ANIMACIÓN DE ESTRELLAS ==========
+    const canvas = document.getElementById('stars-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Ajustar canvas al tamaño de la ventana
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    // Generar QR
-    QRCode.toCanvas(document.getElementById('qrcode'), raUrl, function (error) {
+    // Crear estrellas
+    const stars = [];
+    const starCount = window.innerWidth < 768 ? 100 : 150; // Menos estrellas en móvil (para que no pete)
+
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2,
+        opacity: Math.random(),
+        fadeSpeed: Math.random() * 0.01 + 0.005,
+        fadeDirection: Math.random() > 0.5 ? 1 : -1
+      });
+    }
+
+    // Animar estrellas
+    function animateStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      stars.forEach(star => {
+        // Actualizar opacidad para efecto de parpadeo (Es para la velocidad de parpadeo
+        //  por si quieres cambiar algo)
+        star.opacity += star.fadeSpeed * star.fadeDirection;
+        
+        if (star.opacity >= 1 || star.opacity <= 0.2) {
+          star.fadeDirection *= -1;
+        }
+        
+        // Dibujar estrellas
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+        ctx.fill();
+      });
+      
+      requestAnimationFrame(animateStars);
+    }
+
+    animateStars();
+
+    // ========== Parte para el QR ==========
+    const raUrl = "https://valnm00.github.io/expomath-ra/ra.html";
+    const ra_no_camara = "https://valnm00.github.io/expomath-ra/ra_no_camara.html";
+    QRCode.toCanvas(document.getElementById('qrcode'), raUrl, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: '#2d3748',
+        light: '#ffffff'
+      }
+    }, function (error) {
       if (error) console.error(error);
       console.log('QR generado correctamente!');
     });
 
-    // Botón para abrir RA
+    // ========== BOTÓN PARA ABRIR RA ==========
     document.getElementById('open-ra').addEventListener('click', () => {
       window.location.href = raUrl;
+    });
+    // ========== BOTÓN PARA ABRIR RA SIN CAMARA ==========
+    document.getElementById('open-3d').addEventListener('click', () => {
+      window.location.href = ra_no_camara;
     });
   </script>
 </body>
