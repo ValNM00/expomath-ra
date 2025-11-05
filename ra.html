@@ -3,93 +3,397 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Expomath RA - Profesional</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Expomath RA (Webcam)</title>
+  
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/1.7.6/aframe/build/aframe-ar.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <script src="js/ra.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000000;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    /* CAMBIO: La escena está oculta por CSS al inicio */
+    a-scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      visibility: hidden; 
+    }
+
+    /* (Estilos de Overlay, Botón, Loading, etc. sin cambios) */
+    #start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    #start-button {
+      background: #4D79FF;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    #start-button:active { transform: scale(0.95); }
+    .info-overlay {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      z-index: 1000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+      display: none; 
+    }
+    .info-overlay h3 { margin: 0 0 8px 0; font-size: 16px; color: #4D79FF; font-weight: 600; }
+    .info-overlay p { margin: 4px 0; line-height: 1.4; font-size: 12px; }
+    .toggle-info {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(77, 121, 255, 0.9);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      z-index: 1001;
+      display: none; 
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .toggle-info:active { transform: scale(0.95); }
+    .info-overlay.hidden { transform: translateX(-120%); transition: transform 0.3s ease; }
+    .info-overlay.visible { transform: translateX(0); transition: transform 0.3s ease; }
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 18px;
+      z-index: 2000;
+      text-align: center;
+    }
+    .loading-spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
 
-<body style="margin:0; overflow:hidden;">
+<body>
+  
+  <div id="start-overlay">
+    <button id="start-button">INICIAR EXPERIENCIA</button>
+  </div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" shadow="type: pcfsoft">
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando geometrías...</p>
+  </div>
+  <button class="toggle-info" id="toggle-info">ℹ️</button>
+  <div class="info-overlay visible" id="info-overlay">
+    <h3>🌟 Expomath RA</h3>
+    <p>👆 Toca las figuras para ver info</p>
+    <p>🔄 Arrastra para rotar la vista</p>
+    <p>🔊 Sonido al interactuar</p>
+  </div>
 
-    <a-entity light="type: directional; intensity: 0.8" position="2 4 2"></a-entity>
-    <a-entity light="type: ambient; intensity: 0.5"></a-entity>
+  <a-scene 
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
+    renderer="antialias: true; colorManagement: true; sortObjects: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    loading-screen="enabled: false"
+    style="visibility: hidden;">
 
-    <a-entity position="0 0 0">
+    <a-assets>
+      <audio id="click-sound" src="https://cdn.aframe.io/examples/audio/click.ogg" preload="auto"></audio>
+    </a-assets>
 
-      <a-box id="cubo" position="-2 0 -2.5" rotation="0 45 0" material="color: #FF4D4D; metalness: 0.6; roughness: 0.4;"
-        shadow="cast: true; receive: true" scale="0.6 0.6 0.6">
-        <a-plane visible="false" position="0 1.2 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Cubo\nA=6a²\nV=a³\nEj: Caja de regalo" color="white" align="center" width="1.4"
-            position="0 0 0.01"></a-text>
+    <a-entity light="type: directional; intensity: 1.0" position="3 5 3"></a-entity>
+    <a-entity light="type: ambient; intensity: 0.6; color: #667788"></a-entity>
+    <a-entity light="type: point; intensity: 0.4; distance: 10" position="0 2 0"></a-entity>
+
+    <a-entity id="circle-container" position="0 1.2 -1">
+
+      <a-box id="cubo" position="0 0 -2.5" rotation="0 0 0" 
+        material="color: #FF4D4D; metalness: 0.7; roughness: 0.3; emissive: #FF0000; emissiveIntensity: 0.15"
+        scale="0.8 0.8 0.8"
+        animation="property: rotation; to: 0 360 0; dur: 10000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="CUBO\nArea: 6a²\nVolumen: a³\nEjemplo: Caja de regalo" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-box>
 
-      <a-sphere id="esfera" position="-3 0 0" radius="0.4" material="color: #4D79FF; metalness: 0.7; roughness: 0.3;"
-        shadow="cast: true; receive: true">
-        <a-plane visible="false" position="0 1.1 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Esfera\nA=4πr²\nV=4/3πr³\nEj: Pelota" color="white" align="center" width="1.4"
-            position="0 0 0.01"></a-text>
+      <a-sphere id="esfera" position="1.96 0 -1.56" radius="0.5" 
+        material="color: #4D79FF; metalness: 0.8; roughness: 0.2; emissive: #0044FF; emissiveIntensity: 0.2"
+        animation="property: position; to: 1.96 0.4 -1.56; dur: 2500; dir: alternate; easing: easeInOutSine; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="ESFERA\nArea: 4πr²\nVolumen: 4/3πr³\nEjemplo: Pelota" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-sphere>
 
-      <a-cylinder id="cilindro" position="-2 0 2.5" radius="0.3" height="0.8"
-        material="color: #FFB84D; metalness: 0.6; roughness: 0.3;" shadow="cast: true; receive: true">
-        <a-plane visible="false" position="0 1.1 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Cilindro\nA=2πr(h+r)\nV=πr²h\nEj: Lata de soda" color="white" align="center" width="1.4"
-            position="0 0 0.01"></a-text>
+      <a-cylinder id="cilindro" position="2.44 0 0.52" radius="0.4" height="1"
+        material="color: #FFB84D; metalness: 0.6; roughness: 0.3; emissive: #FF8800; emissiveIntensity: 0.15"
+        animation="property: rotation; to: 0 360 0; dur: 8000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="CILINDRO\nArea: 2πr(h+r)\nVolumen: πr²h\nEjemplo: Lata" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-cylinder>
 
-      <a-cone id="piramide" position="2 0 2.5" radius-bottom="0.35" height="0.7"
-        material="color: #4DFF88; metalness: 0.5; roughness: 0.5;" shadow="cast: true; receive: true">
-        <a-plane visible="false" position="0 1.1 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Pirámide\nA=?\nV=1/3×base×altura\nEj: Pirámide Egipto" color="white" align="center" width="1.4"
-            position="0 0 0.01"></a-text>
+      <a-cone id="piramide" position="1.13 0 2.24" radius-bottom="0.45" height="0.9"
+        material="color: #4DFF88; metalness: 0.5; roughness: 0.4; emissive: #00FF44; emissiveIntensity: 0.15"
+        animation="property: rotation; to: 0 360 0; dur: 9000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="PIRAMIDE\nVolumen: 1/3×base×h\nEjemplo: Pirámide Egipto" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-cone>
 
-      <a-entity id="fractal" gltf-model="assets/fractal.glb" scale="0.3 0.3 0.3" position="3 0 0"
-        shadow="cast: true; receive: true">
-        <a-plane visible="false" position="0 1.0 0" rotation="-90 0 0" width="1.8" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Fractal\nEstructura compleja auto-similar" color="white" align="center" width="1.7"
-            position="0 0 0.01"></a-text>
-        </a-plane>
-      </a-entity>
-
-      <a-dodecahedron id="dodecaedro" position="2 0 -2.5" radius="0.4"
-        material="color: #FFD700; metalness: 0.7; roughness: 0.3;" shadow="cast: true; receive: true"
-        scale="0.8 0.8 0.8">
-        <a-plane visible="false" position="0 1.1 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Dodecaedro\n12 caras (pentágonos)\n30 aristas, 20 vértices" color="white" align="center"
-            width="1.4" position="0 0 0.01"></a-text>
+      <a-dodecahedron id="dodecaedro" position="-1.13 0 2.24" radius="0.5"
+        material="color: #FFD700; metalness: 0.7; roughness: 0.3; emissive: #FFAA00; emissiveIntensity: 0.2"
+        scale="0.8 0.8 0.8"
+        animation="property: rotation; to: 360 360 0; dur: 15000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="DODECAEDRO\n12 caras pentagonales\n30 aristas, 20 vertices" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-dodecahedron>
 
-      <a-torus id="torus" position="0 0.5 -3.5" radius="0.4" radius-tubular="0.1"
-        material="color: #6A4DFF; metalness: 0.5; roughness: 0.5;" shadow="cast: true; receive: true" rotation="90 0 0">
-        <a-plane visible="false" position="0 0.7 0" rotation="-90 0 0" width="1.5" height="0.6" color="#000000"
-          opacity="0.6">
-          <a-text value="Torus (Dona)\nA=4π²Rr\nV=2π²Rr²\nEj: Dona" color="white" align="center" width="1.4"
-            position="0 0 0.01"></a-text>
+      <a-torus id="torus" position="-2.44 0 0.52" radius="0.5" radius-tubular="0.15"
+        material="color: #6A4DFF; metalness: 0.6; roughness: 0.3; emissive: #4400FF; emissiveIntensity: 0.15"
+        rotation="90 0 0"
+        animation="property: rotation; to: 90 360 0; dur: 11000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="-90 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="TORUS (Dona)\nArea: 4π²Rr\nVolumen: 2π²Rr²\nEjemplo: Dona" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
         </a-plane>
       </a-torus>
 
+      <a-octahedron id="fractal" position="-1.96 0 -1.56" radius="0.55"
+        material="color: #FF4DFF; metalness: 0.7; roughness: 0.2; emissive: #FF00FF; emissiveIntensity: 0.2"
+        scale="0.75 0.75 0.75"
+        animation="property: rotation; to: 360 360 360; dur: 13000; easing: linear; loop: true"
+        sound="on: click; src: #click-sound">
+        <a-plane class="info-panel" visible="false" position="0 1.2 0" rotation="0 0 0" width="2" height="1" 
+          material="color: #000000; opacity: 0.9; transparent: true; side: front"
+          look-at="[camera]">
+          <a-text value="OCTAEDRO\n8 caras triangulares\n6 vertices, 12 aristas" 
+            color="#FFFFFF" align="center" width="1.8" position="0 0 0.05"></a-text>
+        </a-plane>
+      </a-octahedron>
+
     </a-entity>
 
-    <a-entity camera look-controls>
-      <a-cursor fuse="false" rayorigin="mouse"></a-cursor>
+    <a-entity camera>
+      <a-cursor 
+        fuse="true" 
+        fuse-timeout="1500"
+        raycaster="objects: [id]; far: 10"
+        material="color: #4D79FF; shader: flat"
+        geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015">
+        <a-animation 
+          begin="fusing" 
+          easing="ease-in" 
+          attribute="scale"
+          fill="backwards" 
+          from="1 1 1" 
+          to="0.2 0.2 0.2" 
+          dur="1500">
+        </a-animation>
+      </a-cursor>
     </a-entity>
   </a-scene>
 
-</body>
+  <script>
+    // ========== COMPONENTE LOOK-AT (Sigue siendo necesario para los paneles) ==========
+    AFRAME.registerComponent('look-at', {
+      schema: { type: 'selector' },
+      init: function () { this.target = this.data; },
+      tick: function () {
+        if (!this.target) { this.target = document.querySelector('[camera]'); }
+        if (this.target && this.el.object3D.visible) {
+          this.el.object3D.lookAt(this.target.object3D.position);
+        }
+      }
+    });
 
+    // ========== INTERACCIÓN (Lógica de voz y paneles sin cambios) ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      const figuras = ['cubo', 'esfera', 'cilindro', 'piramide', 'fractal', 'dodecaedro', 'torus'];
+      let currentOpenPanel = null;
+
+      const speechData = {
+        'cubo': 'Cubo: Área es igual a 6 por lado al cuadrado, Volumen es igual a lado al cubo, ejemplo: caja de regalo',
+        'esfera': 'Esfera: Área es igual a 4 pi r cuadrado, Volumen es igual a 4 tercios pi r cubo, ejemplo: pelota',
+        'cilindro': 'Cilindro: Área es igual a 2 pi r por h más r, Volumen es igual a pi r cuadrado h, ejemplo: lata de soda',
+        'piramide': 'Pirámide: Volumen es igual a un tercio por base por altura, ejemplo: pirámide de Egipto',
+        'fractal': 'Octaedro: 8 caras triangulares, 6 vertices, 12 aristas', 
+        'dodecaedro': 'Dodecaedro: Figura de 12 caras pentagonales regulares.',
+        'torus': 'Torus o Dona: Área es igual a 4 pi cuadrado R r, Volumen es igual a 2 pi cuadrado R r cuadrado'
+      };
+      
+      const scene = document.querySelector('a-scene');
+      const startOverlay = document.getElementById('start-overlay');
+      const startButton = document.getElementById('start-button');
+      const loadingEl = document.getElementById('loading');
+      const toggleBtn = document.getElementById('toggle-info');
+      const infoOverlay = document.getElementById('info-overlay');
+      const clickSound = document.querySelector('#click-sound');
+
+      // --- CAMBIO: La lógica de inicio ahora también muestra la escena de AR.js ---
+      startButton.addEventListener('click', function() {
+        startOverlay.style.display = 'none'; 
+        
+        // Muestra la escena. AR.js detectará esto y pedirá la cámara.
+        scene.style.visibility = 'visible'; 
+        
+        toggleBtn.style.display = 'flex';
+        infoOverlay.style.display = 'block';
+
+        // Desbloqueo de audio
+        if (clickSound) {
+          clickSound.play().then(() => {
+            clickSound.pause();
+            clickSound.currentTime = 0; 
+            console.log("Contexto de audio desbloqueado.");
+          }).catch(e => {
+            console.warn("No se pudo desbloquear el audio, se activará en el primer click.");
+          });
+        }
+        
+        // Ocultar info
+        setTimeout(() => {
+          if (infoVisible) { 
+            infoOverlay.classList.add('hidden');
+            infoOverlay.classList.remove('visible');
+            infoVisible = false;
+          }
+        }, 5000);
+      });
+      
+      // El resto de la lógica es idéntica
+      
+      if (scene.hasLoaded) {
+        setupInteractions();
+      } else {
+        scene.addEventListener('loaded', setupInteractions);
+      }
+
+      function setupInteractions() {
+        console.log('Configurando interacciones...');
+        
+        figuras.forEach(figuraId => {
+          const figura = document.getElementById(figuraId);
+          if (figura) {
+            const infoPanel = figura.querySelector('.info-panel');
+            
+            figura.addEventListener('click', function(e) {
+              e.stopPropagation();
+              
+              if (currentOpenPanel && currentOpenPanel !== infoPanel) {
+                currentOpenPanel.setAttribute('visible', false);
+              }
+              
+              if (infoPanel) {
+                const isVisible = infoPanel.getAttribute('visible') === 'true';
+                infoPanel.setAttribute('visible', !isVisible);
+                currentOpenPanel = !isVisible ? infoPanel : null;
+              }
+
+              if (speechData[figuraId]) {
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(speechData[figuraId]);
+                utterance.lang = 'es-ES'; 
+                window.speechSynthesis.speak(utterance);
+              }
+            });
+          }
+        });
+
+        loadingEl.style.display = 'none';
+      }
+
+      let infoVisible = true;
+      toggleBtn.addEventListener('click', function() {
+        infoVisible = !infoVisible;
+        infoOverlay.classList.toggle('hidden', !infoVisible);
+        infoOverlay.classList.visible = infoVisible;
+        
+        if (clickSound) {
+           clickSound.currentTime = 0;
+           clickSound.play();
+        }
+      });
+    });
+
+  </script>
+
+</body>
 </html>
