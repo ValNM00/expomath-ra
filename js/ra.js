@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     {id:'fractal', texto:'Fractal: estructura compleja auto-similar'},
 
     // --- CAMBIO AÑADIDO ---
-    {id:'dodecaedro', texto:'Dodecaedro: Figura de 12 caras pentagonales regulares.'},
+    {id:'dodecaedro', texto:'Dodecaedro: Figura de 12 caras pentagonales regulares, 30 aristas y 20 vertices.'},
     {id:'torus', texto:'Torus o Dona: Área = 4 π cuadrado R r, Volumen = 2 π cuadrado R r cuadrado'}
   ];
 
